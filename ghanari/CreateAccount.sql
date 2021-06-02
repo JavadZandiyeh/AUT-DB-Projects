@@ -1,4 +1,4 @@
-# this query creates some new accounts
+# this query creates some new accounts (ایجاد حساب کاربری)
 # using hashed passwords with sha1 function
 insert into user values(
 	"Mohammad Javad",

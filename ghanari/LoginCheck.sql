@@ -1,4 +1,4 @@
-# in this query we show login details of users ordered by login time in a descending way
+# in this query we show login details of users ordered by login time in a descending way (بررسی ورود های کاربر)
 
 select Username, Login
 from login_details

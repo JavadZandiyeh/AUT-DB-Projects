@@ -1,4 +1,4 @@
-# this query used for logging in to the account
+# this query used for logging in to the account (ورود به حساب کاربری)
 
 # correct Password and Username --> login and save details to login_details table
 insert into login_details (Username, Login)
