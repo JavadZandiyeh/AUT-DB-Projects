@@ -16,7 +16,6 @@ BEGIN
         Birthday, current_timestamp(), Biography
     );
 END$$
-
 DELIMITER ;
 
 #---------------------------------------LoginToAccount---------------------------------------#
@@ -29,7 +28,6 @@ BEGIN
 	insert into login_details(Username, Login)
     values(Username, current_timestamp());
 END$$
-
 DELIMITER ;
 
 
@@ -58,7 +56,6 @@ BEGIN
 	where Username = u_name
 	order by Login desc;
 END$$
-
 DELIMITER ;
 
 
@@ -79,7 +76,6 @@ begin
     
     return curr;
 end$$
-
 DELIMITER ;
 
 
@@ -94,7 +90,6 @@ BEGIN
     insert ignore into follow values
 	(GetCurrentUser(), ToBeFollowed);
 END$$
-
 DELIMITER ;
 
 
@@ -108,7 +103,6 @@ BEGIN
     delete from follow
 	where Follower = GetCurrentUser() and ToBeFollowed = ToBeUnFollowed;
 END$$
-
 DELIMITER ;
 
 
@@ -121,7 +115,6 @@ CREATE PROCEDURE `Block`(
 BEGIN
     insert ignore into block values(Blocked, GetCurrentUser());
 END$$
-
 DELIMITER ;
 
 
@@ -135,7 +128,6 @@ BEGIN
 	delete from block
 	where Blocked = UnBlocked and Blocker = GetCurrentUser();
 END$$
-
 DELIMITER ;
 
 
@@ -158,7 +150,6 @@ BEGIN
     
     end if;
 END$$
-
 DELIMITER ;
 
 
@@ -181,19 +172,22 @@ create trigger after_send_ava_for_hashtag
 	after insert 
     on ava for each row
 begin
-	declare num_sharp int;
-    declare current_position int;
+	
     declare txt varchar(256);
+	declare current_position int;
     declare hashtag char(6);
     
     set txt = new.Content;
     set current_position = 1;
-    select LENGTH(txt) - LENGTH(REPLACE(txt, '#', '')) into num_sharp;
     set txt = new.Content;
     
     loop_label : loop
 		select locate("#", txt, current_position) into current_position;
-        select substring(txt, current_position + 1, 5) into hashtag;
+        if current_position = 0 then
+			leave loop_label;
+		end if;
+        
+        select substring(txt, current_position, 6) into hashtag;
 		
         insert into hashtag (Content, NumberOfUsage)
 		select hashtag, 1
@@ -202,23 +196,70 @@ begin
         insert ignore into hashtagOfEachAva (id, Content)
 		select new.id, hashtag;
         
-        set num_sharp = num_sharp - 1;
-        if num_sharp = 0 then
-			leave  loop_label;
-		end if;
+		set current_position = current_position + 6;
     end loop;
-    
 end$$
 DELIMITER ;
 
-select * from user;
-drop trigger after_send_ava_for_hashtag;
 
-call LoginToAccount("MJZandiyeh");
-call SendAva("Hello i am mohammad javad zandiyeh", null);
--- 1	Hello i am mohammad javad zandiyeh	MJZandiyeh	2021-07-11 10:56:32	
--- 2	Iran and US!!!!	FR	2021-07-11 10:57:23	
--- 3	why did you sent this ava?????	poorya	2021-07-11 11:07:30	1
--- 4	Have a nice day:)	MJZandiyeh	2021-07-11 11:08:18	2
--- 5	:)))))	AT	2021-07-11 11:08:47	2
--- 6	11	MJZandiyeh	2021-07-11 11:22:54	
+#---------------------------------------TrendHashTag---------------------------------------#
+# in this query we find the hashtag which was used more than others (پیدا کردن علامت ویژه با بیشترین استفاده)
+DELIMITER $$
+CREATE PROCEDURE `TrendHashTag`()
+BEGIN
+	select *
+	from hashtag
+	where NumberOfUsage = (select max(NumberOfUsage) from hashtag);
+END$$
+DELIMITER ;
+
+
+#---------------------------------------SeePersonalAva---------------------------------------#
+# in this query users can see what they have sent as ava (دریافت آواهای شخصی)
+DELIMITER $$
+CREATE PROCEDURE `SeePersonalAva`()
+BEGIN
+	select ava.Content, ava.SendingTime
+	from ava
+	where ava.Sender = GetCurrentUser();
+END$$
+DELIMITER ;
+
+
+#---------------------------------------SeeAvasOfSpecificHashtag---------------------------------------#
+# in this query users can see Avas of specific hashtag 
+# if sender of that ava has not blocked this user  (دریافت آواهای یک علامت ویژه)
+DELIMITER $$
+CREATE PROCEDURE `SeeAvasOfSpecificHashtag`(
+	in hash_tag char(6)
+)
+BEGIN
+	select ava.Content as content, ava.Sender as sender, ava.SendingTime as sending_time, hashtagofeachava.Content as hashtag
+	from (hashtagofeachava inner join ava on ava.id = hashtagofeachava.id) inner join block on ava.Sender = block.Blocker
+	where hashtagofeachava.Content = hash_tag and block.Blocked != GetCurrentUser()
+	order by ava.SendingTime desc;
+END$$
+DELIMITER ;
+
+
+#---------------------------------------LikeAva---------------------------------------#
+# in this query users can like ava of other users but not users who have blocked him (پسندیدن آوا)
+DELIMITER $$
+CREATE PROCEDURE `LikeAva`(
+	in id_ava int
+)
+BEGIN
+	insert into avalike
+	select GetCurrentUser(), id_ava
+	where not exists 
+		(select * 
+		from block inner join ava on ava.Sender = block.Blocker
+		where ava.id = id_ava and block.Blocked = GetCurrentUser())
+	on duplicate key update avalike.Ava = avalike.Ava;
+END$$
+DELIMITER ;
+
+
+#---------------------------------------FindNumberOfLikes---------------------------------------#
+
+
