@@ -27,3 +27,4 @@ This is my final project. **Ghanari** is something **Twitter** which has these c
 * FindReceivedMessages :> find received messages
 * FindValidMessageSendersToMe :> find users which have sent valid messages on you
 
+[erdiagram](https://github.com/JavadZandiyeh/AUT-database-projects/blob/main/ghanari_faze2/erd.pdf)
