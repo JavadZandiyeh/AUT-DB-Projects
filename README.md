@@ -3,7 +3,7 @@ This repository contains my data base projects as NoSQL projects and SQL project
 ## project1:
 Working with **Redis** as NoSQL(hosting with Java by using **jedis** package)<br/>
 ## Ghanari:
-This is my final project. **Ghanari** is something **Twitter** which has these capabilities <br/>
+This is my final project. Ghanari is something like Twitter that has these capabilities <br/>
 * CreateAccount :> create account
 * LoginToAccount :> login to account
 * LoginCheck :> check login of all users
